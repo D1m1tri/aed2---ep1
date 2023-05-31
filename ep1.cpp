@@ -3,11 +3,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <malloc.h>
-#include <stdbool.h>
+
 #include <limits.h>
 
 // elemento das listas de adjacência e de resposta - NAO ALTERE ESTA DEFINICAO
-typedef struct estr
+typedef struct estr 
 {
   int adj; // elemento
   int peso; // custo (não precisa ser usado na resposta)
@@ -15,7 +15,7 @@ typedef struct estr
 } NO;
 
 // vertices do grafo (salas) - use este tipo ao criar o grafo  - NAO ALTERE ESTA DEFINICAO
-typedef struct
+typedef struct 
 {
   int flag; // para uso na busca em largura e profundidade, se necessario
   bool aberto; // vale true se a sala em questao esta aberta
@@ -119,7 +119,7 @@ int menorDist(int N, bool * aberto, int * distancia){
 int * dijkstra(VERTICE * grafo, int N, int inicio, int * fechado, bool bloquearPassagem){
   int * distancia = (int*) malloc(N*sizeof(int));
   int * anterior = (int *) malloc(N*sizeof(int));
-
+  
   inicializarGrafo(grafo, distancia, anterior, inicio, N);
   bool aberto[N];
   for (int i=0; i<N; i++) {
@@ -130,7 +130,7 @@ int * dijkstra(VERTICE * grafo, int N, int inicio, int * fechado, bool bloquearP
     int u = menorDist(N, aberto, distancia);
     aberto[u] = false;
     NO * no = grafo[u].inicio;
-
+    
     while (no) {
       if (bloquearPassagem){
         if (fechado[u] == 1) {
@@ -184,26 +184,38 @@ NO * comparar(int * parcial, int * parcialComChave, int fim, int chave){
   NO * temp;
   temp = NULL;
   int atual = fim-1;
-  if (parcial[(fim-1)*3+1] <= parcialComChave[(fim-1)*3+1]+parcial[(chave-1)*3+1]) {
-    while (atual != -1) {
-      NO * novo = (NO*) malloc(sizeof(NO));
-      novo->adj = atual+1;
-      novo->peso = parcial[atual*3+1];
-      novo->prox = temp;
-      temp = novo;
-      atual = parcial[atual*3+2];
+  if (chave > 0) {
+    if (parcial[(fim-1)*3+1] <= parcialComChave[(fim-1)*3+1]+parcial[(chave-1)*3+1]) {
+      while (atual != -1) {
+        NO * novo = (NO*) malloc(sizeof(NO));
+        novo->adj = atual+1;
+        novo->peso = parcial[atual*3+1];
+        novo->prox = temp;
+        temp = novo;
+        atual = parcial[atual*3+2];
+      }
+    }
+    else {
+      while (atual != chave-1) {
+        NO * novo = (NO*) malloc(sizeof(NO));
+        novo->adj = atual + 1;
+        novo->peso = parcialComChave[atual*3-1]+parcial[(chave-1)*3+1];
+        novo->prox = temp;
+        temp = novo;
+        atual = parcialComChave[atual*3+2];
+      }
+      atual = chave - 1;
+      while (atual != -1) {
+        NO * novo = (NO*) malloc(sizeof(NO));
+        novo->adj = atual+1;
+        novo->peso = parcial[atual*3+1];
+        novo->prox = temp;
+        temp = novo;
+        atual = parcial[atual*3+2];
+      }
     }
   }
   else {
-    while (atual != chave-1) {
-      NO * novo = (NO*) malloc(sizeof(NO));
-      novo->adj = atual + 1;
-      novo->peso = parcialComChave[atual*3-1]+parcial[(chave-1)*3+1];
-      novo->prox = temp;
-      temp = novo;
-      atual = parcialComChave[atual*3+2];
-    }
-    atual = chave - 1;
     while (atual != -1) {
       NO * novo = (NO*) malloc(sizeof(NO));
       novo->adj = atual+1;
@@ -223,28 +235,43 @@ NO * caminho(int N, int A, int *ijpeso, int *aberto, int inicio, int fim, int ch
 {
   VERTICE* grafo = criarGrafo(N, A, ijpeso, aberto);
 
-  if (chave > 0) {
-    NO* resp = comparar(dijkstra(grafo, N, inicio-1, aberto, true), dijkstra(grafo, N, chave-1, aberto, false), fim, chave);
-    return resp;
-  }
-  else {
-    int *parcial = dijkstra(grafo, N, inicio-1, aberto, true);
-    NO * temp;
-    temp = NULL;
-    int atual = fim-1;
-    while (atual != -1) {
-      NO * novo = (NO*) malloc(sizeof(NO));
-      novo->adj = atual+1;
-      novo->peso = parcial[atual*3+1];
-      novo->prox = temp;
-      temp = novo;
-      atual = parcial[atual*3+2];
-    }
-    if (temp->prox == NULL) {
-      return NULL;
-    }
-    return temp;
-  }
+  NO* resp = comparar(dijkstra(grafo, N, inicio-1, aberto, true), dijkstra(grafo, N, chave-1, aberto, false), fim, chave);
+
+  return resp;
 }
 
-//////////////////////////////////////////////////////////////////////////////
+
+
+int main() {
+
+
+  // aqui vc pode incluir codigo de teste
+
+  // exemplo de teste trivial
+
+  int N=9; // grafo de 9 vértices numerados de 1..9
+  int A=10; // grafo de 10 arestas
+  int aberto[] = {0,1,1,1,1,1,1,1,1}; // vértice 1 bloqueado
+  int inicio=7;
+  int fim=4;
+  int chave=6;
+  int ijpeso[]={1,2,30, 1,3,20, 2,6,20, 2,7,30, 3,7,80, 5,8,10, 6,7,10, 7,9,80, 4,3,20, 4,9,80};
+
+  // o EP sera testado com uma serie de chamadas como esta
+  NO * teste = NULL;
+  teste = caminho(N, A, ijpeso, aberto, inicio, fim, chave);
+  printf("Caminho = [");
+  if (teste) {
+    while (teste) {
+      printf(" %i,", teste->adj);
+      teste=teste->prox;
+    }
+  }
+  else {
+    printf(" NULL");
+  }
+  printf(" ]\n");
+  return 0;
+}
+
+// por favor nao inclua nenhum código abaixo da função main()
